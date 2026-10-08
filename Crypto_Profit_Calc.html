@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meme Coin Profit & Exit Strategy Calculator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for sleek Web3 icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: JetBrains Mono & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#0f172a',
+                            925: '#0b1120',
+                            950: '#070b14',
+                        },
+                        neon: {
+                            green: '#10b981',
+                            teal: '#14b8a6',
+                            cyan: '#06b6d4',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar and ambient glowing elements */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090e17;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+        .glow-emerald {
+            box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.25);
+        }
+        .glow-cyan {
+            box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.25);
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen antialiased selection:bg-teal-500 selection:text-slate-950">
+
+    <!-- Background Ambient Gradients -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="absolute -top-40 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/3 -right-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-40 left-1/3 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Top Header Navigation -->
+        <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
+            <div class="flex items-center gap-3">
+                <div class="h-11 w-11 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <i class="fa-solid fa-chart-line text-slate-950 text-xl font-black"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                            MemeProfit<span class="text-emerald-400">.terminal</span>
+                        </h1>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            v2.4 PRO
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-400 font-medium">DeFi Meme Coin Profit & Multi-Tier Take-Profit Engine</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <!-- Mode Switcher -->
+                <div class="bg-slate-900/90 p-1 rounded-xl border border-slate-800 flex items-center text-xs font-medium">
+                    <button id="modeSimpleBtn" onclick="switchMode('simple')" class="px-3 py-1.5 rounded-lg transition-all text-white bg-slate-800 shadow">
+                        <i class="fa-solid fa-bolt mr-1 text-emerald-400"></i> Full Exit
+                    </button>
+                    <button id="modeLadderBtn" onclick="switchMode('ladder')" class="px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-stairs mr-1 text-cyan-400"></i> DCA Ladder
+                    </button>
+                </div>
+
+                <!-- Currency Reference Switcher -->
+                <div class="bg-slate-900/90 p-1 rounded-xl border border-slate-800 flex items-center text-xs font-mono">
+                    <button id="currencyUSDBtn" onclick="setCurrency('USD')" class="px-3 py-1.5 rounded-lg font-bold transition-all text-emerald-400 bg-slate-800 shadow">USD</button>
+                    <button id="currencySOLBtn" onclick="setCurrency('SOL')" class="px-3 py-1.5 rounded-lg font-bold transition-all text-slate-400 hover:text-white">SOL</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- Left Panel: Core Parameters & Take-Profit Ladder (Col 7) -->
+            <section class="lg:col-span-7 space-y-6">
+
+                <!-- Primary Market Cap & Investment Card -->
+                <div class="glass-panel border border-slate-800 rounded-2xl p-5 sm:p-6 space-y-5">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-800/60">
+                        <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-emerald-400"></i> Token Setup & Capital
+                        </h2>
+                        <span id="entryPhaseTag" class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            Bonding Phase
+                        </span>
+                    </div>
+
+                    <!-- Entry Market Cap -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center text-xs">
+                            <label for="entryMC" class="font-medium text-slate-300">Entry Market Cap</label>
+                            <span id="entryMCFormatted" class="font-mono text-emerald-400 font-semibold">$10,000</span>
+                        </div>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 font-mono text-sm">$</div>
+                            <input type="number" id="entryMC" value="10000" min="1" step="any"
+                                class="w-full bg-slate-950/80 border border-slate-800 group-hover:border-slate-700 rounded-xl py-2.5 pl-8 pr-4 text-white font-mono text-base focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all">
+                        </div>
+                        <!-- Presets for Entry -->
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <button onclick="setMCValue('entryMC', 7000)" class="px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-[11px] font-mono rounded-lg text-slate-400 hover:text-emerald-300 transition-all">$7K</button>
+                            <button onclick="setMCValue('entryMC', 15000)" class="px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-[11px] font-mono rounded-lg text-slate-400 hover:text-emerald-300 transition-all">$15K</button>
+                            <button onclick="setMCValue('entryMC', 30000)" class="px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-[11px] font-mono rounded-lg text-slate-400 hover:text-emerald-300 transition-all">$30K</button>
+                            <button onclick="setMCValue('entryMC', 69000)" class="px-2 py-1 bg-slate-900 hover:bg-emerald-900/30 border border-emerald-500/30 text-[11px] font-mono rounded-lg text-emerald-400 font-semibold transition-all">$69K Raydium</button>
+                            <button onclick="setMCValue('entryMC', 100000)" class="px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-[11px] font-mono rounded-lg text-slate-400 hover:text-emerald-300 transition-all">$100K</button>
+                            <button onclick="setMCValue('entryMC', 500000)" class="px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-[11px] font-mono rounded-lg text-slate-400 hover:text-emerald-300 transition-all">$500K</button>
+                            <button onclick="setMCValue('entryMC', 1000000)" class="px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-[11px] font-mono rounded-lg text-slate-400 hover:text-emerald-300 transition-all">$1M</button>
+                        </div>
+                    </div>
+
+                    <!-- Target / Exit Market Cap (Used in Simple Mode and as default top tier) -->
+                    <div id="simpleExitContainer" class="space-y-2">
+                        <div class="flex justify-between items-center text-xs">
+                            <label for="exitMC" class="font-medium text-slate-300">Target / Exit Market Cap</label>
+                            <span id="exitMCFormatted" class="font-mono text-cyan-400 font-semibold">$100,000</span>
+                        </div>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 font-mono text-sm">$</div>
+                            <input type="number" id="exitMC" value="100000" min="1" step="any"
+                                class="w-full bg-slate-950/80 border border-slate-800 group-hover:border-slate-700 rounded-xl py-2.5 pl-8 pr-4 text-white font-mono text-base focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all">
+                        </div>
+                        <!-- Presets for Exit -->
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <button onclick="setMCValue('exitMC', 69000)" class="px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-[11px] font-mono rounded-lg text-slate-400 hover:text-cyan-300 transition-all">$69K</button>
+                            <button onclick="setMCValue('exitMC', 250000)" class="px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-[11px] font-mono rounded-lg text-slate-400 hover:text-cyan-300 transition-all">$250K</button>
+                            <button onclick="setMCValue('exitMC', 500000)" class="px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-[11px] font-mono rounded-lg text-slate-400 hover:text-cyan-300 transition-all">$500K</button>
+                            <button onclick="setMCValue('exitMC', 1000000)" class="px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-[11px] font-mono rounded-lg text-slate-400 hover:text-cyan-300 transition-all">$1M</button>
+                            <button onclick="setMCValue('exitMC', 5000000)" class="px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-[11px] font-mono rounded-lg text-slate-400 hover:text-cyan-300 transition-all">$5M</button>
+                            <button onclick="setMCValue('exitMC', 10000000)" class="px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-[11px] font-mono rounded-lg text-slate-400 hover:text-cyan-300 transition-all">$10M</button>
+                            <button onclick="setMCValue('exitMC', 50000000)" class="px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-[11px] font-mono rounded-lg text-slate-400 hover:text-cyan-300 transition-all">$50M</button>
+                            <button onclick="setMCValue('exitMC', 100000000)" class="px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-[11px] font-mono rounded-lg text-slate-400 hover:text-cyan-300 transition-all">$100M</button>
+                        </div>
+                    </div>
+
+                    <!-- Investment Capital & SOL Converter -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                        <div class="space-y-1.5">
+                            <label for="investAmount" class="block text-xs font-medium text-slate-300">
+                                Investment Capital (<span id="investCurrencyLabel">USD</span>)
+                            </label>
+                            <div class="relative">
+                                <span id="investCurrencySymbol" class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500 font-mono text-sm">$</span>
+                                <input type="number" id="investAmount" value="100" min="0.01" step="any"
+                                    class="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 pl-8 pr-4 text-white font-mono text-base focus:outline-none focus:border-emerald-500 transition-all">
+                            </div>
+                            <!-- Fast investment increment chips -->
+                            <div class="flex gap-1 pt-1">
+                                <button onclick="quickAddInvest(25)" class="px-2 py-0.5 bg-slate-900 border border-slate-800 text-[10px] font-mono rounded text-slate-400 hover:text-white">+25</button>
+                                <button onclick="quickAddInvest(50)" class="px-2 py-0.5 bg-slate-900 border border-slate-800 text-[10px] font-mono rounded text-slate-400 hover:text-white">+50</button>
+                                <button onclick="quickAddInvest(100)" class="px-2 py-0.5 bg-slate-900 border border-slate-800 text-[10px] font-mono rounded text-slate-400 hover:text-white">+100</button>
+                                <button onclick="quickAddInvest(500)" class="px-2 py-0.5 bg-slate-900 border border-slate-800 text-[10px] font-mono rounded text-slate-400 hover:text-white">+500</button>
+                            </div>
+                        </div>
+
+                        <!-- SOL Price Benchmark Reference -->
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between items-center">
+                                <label for="solPrice" class="text-xs font-medium text-slate-300">SOL Benchmark Price</label>
+                                <span class="text-[10px] text-slate-500">Live rate ref</span>
+                            </div>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500 font-mono text-sm">$</span>
+                                <input type="number" id="solPrice" value="150" min="1" step="any"
+                                    class="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2.5 pl-8 pr-4 text-white font-mono text-base focus:outline-none focus:border-cyan-500 transition-all">
+                            </div>
+                            <p id="solEquivHint" class="text-[11px] font-mono text-slate-400 pt-1 flex items-center gap-1">
+                                <i class="fa-brands fa-ethereum text-cyan-400 text-xs"></i> 100 USD ≈ 0.67 SOL
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Collapsible Fees & Slippage Settings -->
+                    <div class="border-t border-slate-800/80 pt-3">
+                        <button onclick="toggleDEXSettings()" class="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-2 focus:outline-none transition-colors">
+                            <i id="feeChevron" class="fa-solid fa-chevron-right text-[10px] transition-transform duration-200"></i>
+                            <span class="font-semibold">Fee & Slippage Settings (DEX / Priority)</span>
+                            <span class="text-[10px] px-1.5 py-0.5 bg-slate-800 rounded text-slate-400 font-mono">Real-world net model</span>
+                        </button>
+                        
+                        <div id="feeSettingsPanel" class="hidden mt-3 grid grid-cols-1 sm:grid-cols-2 gap-4 p-3 bg-slate-950/60 rounded-xl border border-slate-800/60">
+                            <div>
+                                <label class="block text-[11px] text-slate-400 font-medium mb-1">DEX Fee (Swap protocol, Raydium / Pump)</label>
+                                <div class="relative">
+                                    <input type="number" id="dexFeePct" value="1.0" min="0" max="10" step="0.1"
+                                        class="w-full bg-slate-900 border border-slate-800 rounded-lg py-1.5 pl-3 pr-7 text-xs font-mono text-white focus:outline-none focus:border-teal-500">
+                                    <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 text-xs">%</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] text-slate-400 font-medium mb-1">Price Impact / Slippage & Priority</label>
+                                <div class="relative">
+                                    <input type="number" id="slippagePct" value="1.5" min="0" max="25" step="0.5"
+                                        class="w-full bg-slate-900 border border-slate-800 rounded-lg py-1.5 pl-3 pr-7 text-xs font-mono text-white focus:outline-none focus:border-teal-500">
+                                    <span class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 text-xs">%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Multi-Tier Partial Take-Profit Ladder (Shown in Ladder Mode) -->
+                <div id="ladderSection" class="hidden glass-panel border border-slate-800 rounded-2xl p-5 sm:p-6 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-800/60">
+                        <div>
+                            <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                                <i class="fa-solid fa-stairs text-cyan-400"></i> Staggered Exit Strategy (DCA Out)
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-0.5">Scale out of your position at progressive multiples instead of trying to time the top.</p>
+                        </div>
+                        <button onclick="addLadderTier()" class="self-start sm:self-auto px-2.5 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors">
+                            <i class="fa-solid fa-plus text-[10px]"></i> Add Exit Target
+                        </button>
+                    </div>
+
+                    <!-- Ladder Tiers Container -->
+                    <div id="ladderTiersList" class="space-y-3">
+                        <!-- Populated by JavaScript -->
+                    </div>
+
+                    <!-- Remaining Bag Indicator -->
+                    <div class="flex items-center justify-between text-xs px-3 py-2 bg-slate-950/80 rounded-xl border border-slate-800">
+                        <span class="text-slate-400 font-medium">Unallocated Moonbag (Remaining tokens held):</span>
+                        <span id="unallocatedPct" class="font-mono font-bold text-teal-400">0%</span>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Right Panel: High-Impact Results Terminal (Col 5) -->
+            <section class="lg:col-span-5 space-y-5">
+
+                <!-- Main Overview Dashboard Card -->
+                <div class="glass-panel border border-slate-800 rounded-2xl p-6 glow-emerald relative overflow-hidden space-y-6">
+                    
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                            <span class="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
+                            Live Execution Projection
+                        </span>
+                        <div id="statusBadge" class="text-xs font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
+                            10.00x Target
+                        </div>
+                    </div>
+
+                    <!-- Big Impact Multiplier & ROI -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-slate-950/90 border border-slate-800/90 rounded-2xl p-4">
+                            <div class="text-[11px] uppercase tracking-wider text-slate-400 font-medium">Total Multiplier</div>
+                            <div id="resultMultiplier" class="text-3xl sm:text-4xl font-extrabold text-emerald-400 font-mono mt-1">10.00x</div>
+                            <div id="multiplierSub" class="text-[11px] text-slate-500 font-mono mt-0.5">MC $10K → $100K</div>
+                        </div>
+                        <div class="bg-slate-950/90 border border-slate-800/90 rounded-2xl p-4">
+                            <div class="text-[11px] uppercase tracking-wider text-slate-400 font-medium">Net ROI Rate</div>
+                            <div id="resultROI" class="text-3xl sm:text-4xl font-extrabold text-cyan-400 font-mono mt-1">+900%</div>
+                            <div id="roiFeeNotice" class="text-[11px] text-slate-500 font-mono mt-0.5">After fees & slippage</div>
+                        </div>
+                    </div>
+
+                    <!-- Payout Card Highlight -->
+                    <div class="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-teal-950/30 to-slate-950 border border-emerald-500/30 space-y-4">
+                        <div>
+                            <div class="text-xs text-slate-400 font-medium flex items-center justify-between">
+                                <span>Estimated Net Payout</span>
+                                <span id="payoutModeBadge" class="text-[10px] text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/50">Full Exit</span>
+                            </div>
+                            <div id="resultNetPayout" class="text-4xl font-black text-white font-mono tracking-tight mt-1">$975.00</div>
+                            <div id="solEquivPayout" class="text-xs font-mono text-cyan-400/90 mt-1">≈ 6.50 SOL</div>
+                        </div>
+
+                        <div class="pt-3 border-t border-emerald-500/20 flex items-center justify-between text-sm">
+                            <span class="text-slate-300">Clean Net Profit:</span>
+                            <span id="resultNetProfit" class="font-mono font-bold text-emerald-400 text-lg">+$875.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Calculation Metric Breakdown -->
+                    <div class="space-y-2.5 text-xs font-mono">
+                        <div class="flex justify-between text-slate-400">
+                            <span>Initial Principal:</span>
+                            <span id="breakdownPrincipal" class="text-slate-200 font-semibold">$100.00</span>
+                        </div>
+                        <div class="flex justify-between text-slate-400">
+                            <span>Gross Value:</span>
+                            <span id="breakdownGross" class="text-slate-200">$1,000.00</span>
+                        </div>
+                        <div class="flex justify-between text-slate-400">
+                            <span>DEX Swap & Slippage Est:</span>
+                            <span id="breakdownFees" class="text-rose-400">-$25.00 (2.5%)</span>
+                        </div>
+                        <div class="flex justify-between text-slate-400 pt-2 border-t border-slate-800/60 font-semibold">
+                            <span>Ecosystem Phase:</span>
+                            <span id="breakdownPhase" class="text-teal-300">Raydium Migration Target</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons: Copy Plan & Quick Reset -->
+                    <div class="flex gap-2 pt-2">
+                        <button onclick="copyStrategySummary()" class="flex-1 py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold rounded-xl text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98]">
+                            <i class="fa-regular fa-clipboard"></i> <span id="copyBtnText">Copy Trade Summary</span>
+                        </button>
+                        <button onclick="resetToDefaults()" title="Reset to standard defaults" class="p-3 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl border border-slate-800 transition-colors">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- Educational Meme Ecosystem Reference Milestone Card -->
+                <div class="glass-panel border border-slate-800 rounded-2xl p-5 text-xs space-y-3">
+                    <div class="font-semibold text-slate-300 uppercase tracking-wider text-[11px] flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved text-cyan-400"></i> Meme Coin Milestones Guide
+                    </div>
+                    <div class="space-y-2 text-slate-400 text-[11px] leading-relaxed">
+                        <div class="flex items-start gap-2">
+                            <span class="font-mono text-emerald-400 font-bold shrink-0">$69K</span>
+                            <span><strong>Bonding Curve Completion:</strong> Token graduates from Pump.fun / bonding contract to Raydium/Uniswap liquidity pools.</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="font-mono text-teal-400 font-bold shrink-0">$1M - $5M</span>
+                            <span><strong>Community Cult:</strong> Organic meme culture, multiple callers, initial Telegram/Discord raiding dominance.</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="font-mono text-cyan-400 font-bold shrink-0">$50M+</span>
+                            <span><strong>Tier-1 CEX Wave:</strong> Listings on centralized exchanges (Bybit, Binance, Coinbase futures), massive retail volume.</span>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+        </main>
+
+        <!-- Staggered Strategy Detailed Breakdown Table (Only visible in Ladder Mode) -->
+        <section id="ladderSummaryTableSection" class="hidden glass-panel border border-slate-800 rounded-2xl p-6 space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-200">Ladder Execution Schedule Breakdown</h3>
+                    <p class="text-xs text-slate-400">Step-by-step liquidation math for each take-profit tranche</p>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left font-mono text-xs text-slate-300">
+                    <thead class="bg-slate-950/80 text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-800">
+                        <tr>
+                            <th class="py-3 px-3">Step</th>
+                            <th class="py-3 px-3">Target MC</th>
+                            <th class="py-3 px-3">Multiplier</th>
+                            <th class="py-3 px-3">Tranche %</th>
+                            <th class="py-3 px-3">Gross Realized</th>
+                            <th class="py-3 px-3">Net Realized</th>
+                            <th class="py-3 px-3">Net Profit</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ladderTableBody" class="divide-y divide-slate-800/60">
+                        <!-- Populated by JS -->
+                    </tbody>
+                    <tfoot id="ladderTableFoot" class="font-bold text-white bg-slate-950/40">
+                        <!-- Populated by JS -->
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="pt-6 border-t border-slate-900 text-center text-xs text-slate-500 space-y-1">
+            <p>Meme coins are volatile, speculative assets. Calculations are estimations for strategic planning and DCA risk management.</p>
+            <p>© 2026 MemeProfit Terminal • Built for Web3 Degens & Systematic Traders</p>
+        </footer>
+
+    </div>
+
+    <!-- Hidden element for clipboard helper -->
+    <textarea id="copyBuffer" class="sr-only" aria-hidden="true"></textarea>
+
+    <script>
+        // Core State
+        let currentMode = 'simple'; // 'simple' | 'ladder'
+        let currentCurrency = 'USD'; // 'USD' | 'SOL'
+
+        // Ladder Tiers Default Array
+        let ladderTiers = [
+            { id: 1, targetMC: 20000, sellPercent: 50, label: "Derisk Initial (Take out principal)" },
+            { id: 2, targetMC: 50000, sellPercent: 25, label: "Mid Runner Exit" },
+            { id: 3, targetMC: 100000, sellPercent: 25, label: "Moonshot Target" }
+        ];
+
+        // DOM Element Cache
+        const entryMCInput = document.getElementById('entryMC');
+        const exitMCInput = document.getElementById('exitMC');
+        const investAmountInput = document.getElementById('investAmount');
+        const solPriceInput = document.getElementById('solPrice');
+        const dexFeeInput = document.getElementById('dexFeePct');
+        const slippageInput = document.getElementById('slippagePct');
+
+        const entryMCFormatted = document.getElementById('entryMCFormatted');
+        const exitMCFormatted = document.getElementById('exitMCFormatted');
+        const entryPhaseTag = document.getElementById('entryPhaseTag');
+        const simpleExitContainer = document.getElementById('simpleExitContainer');
+        const ladderSection = document.getElementById('ladderSection');
+        const ladderSummaryTableSection = document.getElementById('ladderSummaryTableSection');
+        const ladderTiersList = document.getElementById('ladderTiersList');
+        const unallocatedPctLabel = document.getElementById('unallocatedPct');
+
+        const resultMultiplier = document.getElementById('resultMultiplier');
+        const resultROI = document.getElementById('resultROI');
+        const resultNetPayout = document.getElementById('resultNetPayout');
+        const resultNetProfit = document.getElementById('resultNetProfit');
+        const solEquivPayout = document.getElementById('solEquivPayout');
+        const multiplierSub = document.getElementById('multiplierSub');
+        const statusBadge = document.getElementById('statusBadge');
+        const payoutModeBadge = document.getElementById('payoutModeBadge');
+
+        const breakdownPrincipal = document.getElementById('breakdownPrincipal');
+        const breakdownGross = document.getElementById('breakdownGross');
+        const breakdownFees = document.getElementById('breakdownFees');
+        const breakdownPhase = document.getElementById('breakdownPhase');
+
+        // Formats numbers cleanly as currency
+        function formatUSD(num) {
+            if (num >= 1000000) {
+                return '$' + (num / 1000000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + 'M';
+            } else if (num >= 1000) {
+                return '$' + (num / 1000).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'K';
+            }
+            return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatExactUSD(num) {
+            return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // Determine Milestone Label from Market Cap
+        function getPhaseName(mc) {
+            if (mc < 30000) return "Early Bonding (Pump.fun/Moonshot)";
+            if (mc < 69000) return "Bonding Curve (~$69K Raydium threshold)";
+            if (mc < 250000) return "Early DEX Pool Migration";
+            if (mc < 1000000) return "Micro-Cap Organic Runner";
+            if (mc < 10000000) return "$1M+ Community Cult Status";
+            if (mc < 50000000) return "High-Tier Meme / Multi-DEX";
+            return "Tier-1 CEX Listing / Moonshot Zone 🚀";
+        }
+
+        // Set Market Cap Presets
+        function setMCValue(elementId, value) {
+            const el = document.getElementById(elementId);
+            if (el) {
+                el.value = value;
+                calculate();
+            }
+        }
+
+        // Fast Investment Increment
+        function quickAddInvest(amount) {
+            const current = parseFloat(investAmountInput.value) || 0;
+            investAmountInput.value = current + amount;
+            calculate();
+        }
+
+        // Switch Between Full Exit & Ladder Strategy
+        function switchMode(mode) {
+            currentMode = mode;
+            const simpleBtn = document.getElementById('modeSimpleBtn');
+            const ladderBtn = document.getElementById('modeLadderBtn');
+
+            if (mode === 'simple') {
+                simpleBtn.className = "px-3 py-1.5 rounded-lg transition-all text-white bg-slate-800 shadow";
+                ladderBtn.className = "px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white";
+                simpleExitContainer.classList.remove('hidden');
+                ladderSection.classList.add('hidden');
+                ladderSummaryTableSection.classList.add('hidden');
+                payoutModeBadge.innerText = "Full Exit Mode";
+            } else {
+                ladderBtn.className = "px-3 py-1.5 rounded-lg transition-all text-white bg-slate-800 shadow";
+                simpleBtn.className = "px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white";
+                simpleExitContainer.classList.add('hidden');
+                ladderSection.classList.remove('hidden');
+                ladderSummaryTableSection.classList.remove('hidden');
+                payoutModeBadge.innerText = "DCA Ladder Mode";
+                renderLadderTiers();
+            }
+            calculate();
+        }
+
+        // Currency Toggle
+        function setCurrency(curr) {
+            currentCurrency = curr;
+            const usdBtn = document.getElementById('currencyUSDBtn');
+            const solBtn = document.getElementById('currencySOLBtn');
+            const investCurrencyLabel = document.getElementById('investCurrencyLabel');
+            const investCurrencySymbol = document.getElementById('investCurrencySymbol');
+            const solPrice = parseFloat(solPriceInput.value) || 150;
+
+            if (curr === 'USD') {
+                usdBtn.className = "px-3 py-1.5 rounded-lg font-bold transition-all text-emerald-400 bg-slate-800 shadow";
+                solBtn.className = "px-3 py-1.5 rounded-lg font-bold transition-all text-slate-400 hover:text-white";
+                investCurrencyLabel.innerText = "USD";
+                investCurrencySymbol.innerText = "$";
+            } else {
+                solBtn.className = "px-3 py-1.5 rounded-lg font-bold transition-all text-cyan-400 bg-slate-800 shadow";
+                usdBtn.className = "px-3 py-1.5 rounded-lg font-bold transition-all text-slate-400 hover:text-white";
+                investCurrencyLabel.innerText = "SOL";
+                investCurrencySymbol.innerText = "◎";
+            }
+            calculate();
+        }
+
+        // Toggle DEX Settings
+        function toggleDEXSettings() {
+            const panel = document.getElementById('feeSettingsPanel');
+            const icon = document.getElementById('feeChevron');
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                icon.classList.add('rotate-90');
+            } else {
+                panel.classList.add('hidden');
+                icon.classList.remove('rotate-90');
+            }
+        }
+
+        // Ladder Tier Management
+        function renderLadderTiers() {
+            ladderTiersList.innerHTML = '';
+            let totalSold = 0;
+
+            ladderTiers.forEach((tier, index) => {
+                totalSold += Number(tier.sellPercent);
+                const tierEl = document.createElement('div');
+                tierEl.className = "p-3 bg-slate-950/70 border border-slate-800 rounded-xl space-y-2 text-xs";
+                tierEl.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="font-mono text-cyan-400 font-bold">Step ${index + 1} (${tier.label})</span>
+                        ${ladderTiers.length > 1 ? `
+                            <button onclick="removeLadderTier(${tier.id})" class="text-slate-500 hover:text-rose-400 transition-colors">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">Target Market Cap ($)</label>
+                            <input type="number" value="${tier.targetMC}" min="1" step="any"
+                                onchange="updateTierMC(${tier.id}, this.value)"
+                                class="w-full bg-slate-900 border border-slate-800 rounded-lg py-1.5 px-2.5 font-mono text-white text-xs focus:border-cyan-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">Bag Sell Percentage (%)</label>
+                            <input type="number" value="${tier.sellPercent}" min="1" max="100" step="1"
+                                onchange="updateTierPercent(${tier.id}, this.value)"
+                                class="w-full bg-slate-900 border border-slate-800 rounded-lg py-1.5 px-2.5 font-mono text-white text-xs focus:border-cyan-500">
+                        </div>
+                    </div>
+                `;
+                ladderTiersList.appendChild(tierEl);
+            });
+
+            const unallocated = 100 - totalSold;
+            unallocatedPctLabel.innerText = unallocated + '% ' + (unallocated > 0 ? '(Moonbag)' : unallocated < 0 ? '(Over 100%!)' : '(Full Exit)');
+            if (unallocated < 0) {
+                unallocatedPctLabel.className = "font-mono font-bold text-rose-400";
+            } else {
+                unallocatedPctLabel.className = "font-mono font-bold text-teal-400";
+            }
+        }
+
+        function addLadderTier() {
+            const nextId = Date.now();
+            const lastTarget = ladderTiers.length > 0 ? ladderTiers[ladderTiers.length - 1].targetMC * 2 : 100000;
+            ladderTiers.push({
+                id: nextId,
+                targetMC: lastTarget,
+                sellPercent: 20,
+                label: `Tranche ${ladderTiers.length + 1}`
+            });
+            renderLadderTiers();
+            calculate();
+        }
+
+        function removeLadderTier(id) {
+            if (ladderTiers.length <= 1) return;
+            ladderTiers = ladderTiers.filter(t => t.id !== id);
+            renderLadderTiers();
+            calculate();
+        }
+
+        function updateTierMC(id, value) {
+            const t = ladderTiers.find(t => t.id === id);
+            if (t) {
+                t.targetMC = parseFloat(value) || 0;
+                calculate();
+            }
+        }
+
+        function updateTierPercent(id, value) {
+            const t = ladderTiers.find(t => t.id === id);
+            if (t) {
+                t.sellPercent = parseFloat(value) || 0;
+                renderLadderTiers();
+                calculate();
+            }
+        }
+
+        function calculate() {
+            const entryMC = parseFloat(entryMCInput.value) || 0;
+            const exitMC = parseFloat(exitMCInput.value) || 0;
+            const rawInvest = parseFloat(investAmountInput.value) || 0;
+            const solPrice = parseFloat(solPriceInput.value) || 150;
+            const dexFee = parseFloat(dexFeeInput.value) || 0;
+            const slippage = parseFloat(slippageInput.value) || 0;
+
+            const totalFeePct = (dexFee + slippage) / 100;
+
+            // Normalize initial capital to USD for unified math
+            const principalUSD = currentCurrency === 'USD' ? rawInvest : rawInvest * solPrice;
+
+            // Update top labels
+            entryMCFormatted.innerText = formatUSD(entryMC);
+            exitMCFormatted.innerText = formatUSD(exitMC);
+            entryPhaseTag.innerText = getPhaseName(entryMC);
+
+            // Update SOL equivalent hint under investment
+            const solEquiv = currentCurrency === 'USD' 
+                ? (rawInvest / solPrice).toFixed(2) + ' SOL' 
+                : '$' + (rawInvest * solPrice).toLocaleString('en-US', {maximumFractionDigits: 2});
+            document.getElementById('solEquivHint').innerHTML = `<i class="fa-brands fa-ethereum text-cyan-400 text-xs"></i> Value benchmark: ${solEquiv} (@ $${solPrice}/SOL)`;
+
+            if (entryMC <= 0 || principalUSD <= 0) {
+                resultMultiplier.innerText = "0.00x";
+                resultROI.innerText = "0%";
+                resultNetPayout.innerText = "$0.00";
+                resultNetProfit.innerText = "$0.00";
+                return;
+            }
+
+            if (currentMode === 'simple') {
+                // SIMPLE FULL-EXIT MATH
+                const multiplier = exitMC / entryMC;
+                const grossPayout = principalUSD * multiplier;
+                const totalFees = grossPayout * totalFeePct;
+                const netPayout = grossPayout - totalFees;
+                const netProfit = netPayout - principalUSD;
+                const roiPct = ((netPayout - principalUSD) / principalUSD) * 100;
+
+                // Update Big Result Elements
+                resultMultiplier.innerText = multiplier.toFixed(2) + 'x';
+                multiplierSub.innerText = `${formatUSD(entryMC)} → ${formatUSD(exitMC)}`;
+                resultROI.innerText = (roiPct >= 0 ? '+' : '') + roiPct.toLocaleString('en-US', {maximumFractionDigits: 1}) + '%';
+                
+                resultNetPayout.innerText = formatExactUSD(netPayout);
+                resultNetProfit.innerText = (netProfit >= 0 ? '+' : '-') + formatExactUSD(Math.abs(netProfit));
+                resultNetProfit.className = netProfit >= 0 
+                    ? "font-mono font-bold text-emerald-400 text-lg" 
+                    : "font-mono font-bold text-rose-400 text-lg";
+
+                // SOL Payout Equiv
+                const netPayoutInSOL = netPayout / solPrice;
+                solEquivPayout.innerText = `≈ ${netPayoutInSOL.toFixed(2)} SOL (@ $${solPrice}/SOL)`;
+
+                // Status Badge & Breakdown
+                statusBadge.innerText = `${multiplier.toFixed(1)}x Milestone`;
+                breakdownPrincipal.innerText = formatExactUSD(principalUSD);
+                breakdownGross.innerText = formatExactUSD(grossPayout);
+                breakdownFees.innerText = `-${formatExactUSD(totalFees)} (${(totalFeePct * 100).toFixed(1)}%)`;
+                breakdownPhase.innerText = getPhaseName(exitMC);
+
+            } else {
+                // DCA LADDER MATH
+                let totalGrossRealized = 0;
+                let totalNetRealized = 0;
+                let totalPctSold = 0;
+
+                const tableBody = document.getElementById('ladderTableBody');
+                const tableFoot = document.getElementById('ladderTableFoot');
+                tableBody.innerHTML = '';
+
+                ladderTiers.forEach((tier, i) => {
+                    const stepMult = tier.targetMC / entryMC;
+                    const portionFraction = tier.sellPercent / 100;
+                    totalPctSold += tier.sellPercent;
+
+                    const trancheGross = (principalUSD * portionFraction) * stepMult;
+                    const trancheFees = trancheGross * totalFeePct;
+                    const trancheNet = trancheGross - trancheFees;
+                    const trancheNetProfit = trancheNet - (principalUSD * portionFraction);
+
+                    totalGrossRealized += trancheGross;
+                    totalNetRealized += trancheNet;
+
+                    // Table Row
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-900/50 transition-colors";
+                    tr.innerHTML = `
+                        <td class="py-2.5 px-3 font-semibold text-slate-200">#${i + 1}</td>
+                        <td class="py-2.5 px-3 text-cyan-300 font-medium">${formatUSD(tier.targetMC)}</td>
+                        <td class="py-2.5 px-3 text-emerald-400 font-bold">${stepMult.toFixed(2)}x</td>
+                        <td class="py-2.5 px-3 text-slate-300">${tier.sellPercent}%</td>
+                        <td class="py-2.5 px-3 text-slate-400">${formatExactUSD(trancheGross)}</td>
+                        <td class="py-2.5 px-3 text-white font-bold">${formatExactUSD(trancheNet)}</td>
+                        <td class="py-2.5 px-3 ${trancheNetProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'} font-semibold">
+                            ${trancheNetProfit >= 0 ? '+' : ''}${formatExactUSD(trancheNetProfit)}
+                        </td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+
+                const totalLadderFees = totalGrossRealized * totalFeePct;
+                const netLadderProfit = totalNetRealized - (principalUSD * (totalPctSold / 100));
+                const overallEffectiveMultiplier = totalGrossRealized / ((principalUSD * (totalPctSold / 100)) || 1);
+                const overallROI = (netLadderProfit / principalUSD) * 100;
+
+                // Table Footer
+                tableFoot.innerHTML = `
+                    <tr class="border-t border-slate-700">
+                        <td class="py-3 px-3 text-emerald-400" colspan="3">Combined Realized (${totalPctSold}%)</td>
+                        <td class="py-3 px-3 text-cyan-300">${totalPctSold}%</td>
+                        <td class="py-3 px-3 text-slate-300">${formatExactUSD(totalGrossRealized)}</td>
+                        <td class="py-3 px-3 text-emerald-300 text-sm">${formatExactUSD(totalNetRealized)}</td>
+                        <td class="py-3 px-3 ${netLadderProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'} text-sm">
+                            ${netLadderProfit >= 0 ? '+' : ''}${formatExactUSD(netLadderProfit)}
+                        </td>
+                    </tr>
+                `;
+
+                // Update Output Dashboard
+                resultMultiplier.innerText = overallEffectiveMultiplier.toFixed(2) + 'x';
+                multiplierSub.innerText = `Blended DCA Realization`;
+                resultROI.innerText = (overallROI >= 0 ? '+' : '') + overallROI.toFixed(1) + '%';
+                resultNetPayout.innerText = formatExactUSD(totalNetRealized);
+                resultNetProfit.innerText = (netLadderProfit >= 0 ? '+' : '-') + formatExactUSD(Math.abs(netLadderProfit));
+                resultNetProfit.className = netLadderProfit >= 0 
+                    ? "font-mono font-bold text-emerald-400 text-lg" 
+                    : "font-mono font-bold text-rose-400 text-lg";
+
+                const netPayoutInSOL = totalNetRealized / solPrice;
+                solEquivPayout.innerText = `≈ ${netPayoutInSOL.toFixed(2)} SOL (Realized)`;
+
+                statusBadge.innerText = `${totalPctSold}% Position Scaled`;
+                breakdownPrincipal.innerText = formatExactUSD(principalUSD);
+                breakdownGross.innerText = formatExactUSD(totalGrossRealized);
+                breakdownFees.innerText = `-${formatExactUSD(totalLadderFees)} (${(totalFeePct * 100).toFixed(1)}%)`;
+                breakdownPhase.innerText = "Staggered Risk Hedge Ladder";
+            }
+        }
+
+        // Copy Strategy Summary to Clipboard
+        function copyStrategySummary() {
+            const entryMC = formatUSD(parseFloat(entryMCInput.value) || 0);
+            const rawInvest = parseFloat(investAmountInput.value) || 0;
+            const solPrice = parseFloat(solPriceInput.value) || 150;
+            const netReturn = resultNetPayout.innerText;
+            const netProfit = resultNetProfit.innerText;
+            const mult = resultMultiplier.innerText;
+
+            let summaryText = `🚀 MEME COIN TRADE PLAN\n`;
+            summaryText += `--------------------------\n`;
+            summaryText += `• Entry Market Cap: ${entryMC}\n`;
+            summaryText += `• Investment: $${rawInvest} (${(rawInvest / solPrice).toFixed(2)} SOL)\n`;
+            
+            if (currentMode === 'simple') {
+                const exitMC = formatUSD(parseFloat(exitMCInput.value) || 0);
+                summaryText += `• Target Exit MC: ${exitMC}\n`;
+                summaryText += `• Multiplier: ${mult}\n`;
+                summaryText += `• Net Projected Return: ${netReturn} (${netProfit})\n`;
+            } else {
+                summaryText += `• Strategy: Multi-Tier Ladder Exit\n`;
+                ladderTiers.forEach((tier, i) => {
+                    summaryText += `  Tier ${i + 1}: Sell ${tier.sellPercent}% at ${formatUSD(tier.targetMC)}\n`;
+                });
+                summaryText += `• Blended Multiplier: ${mult}\n`;
+                summaryText += `• Total Realized Net: ${netReturn} (${netProfit})\n`;
+            }
+            summaryText += `--------------------------\nGenerated via MemeProfit Terminal`;
+
+            const buffer = document.getElementById('copyBuffer');
+            buffer.value = summaryText;
+            buffer.select();
+            document.execCommand('copy');
+
+            const btnText = document.getElementById('copyBtnText');
+            const original = btnText.innerText;
+            btnText.innerText = "Copied to Clipboard!";
+            setTimeout(() => {
+                btnText.innerText = original;
+            }, 2000);
+        }
+
+        // Reset to Standard Defaults
+        function resetToDefaults() {
+            entryMCInput.value = 10000;
+            exitMCInput.value = 100000;
+            investAmountInput.value = 100;
+            solPriceInput.value = 150;
+            dexFeeInput.value = 1.0;
+            slippageInput.value = 1.5;
+            ladderTiers = [
+                { id: 1, targetMC: 20000, sellPercent: 50, label: "Derisk Initial (Take out principal)" },
+                { id: 2, targetMC: 50000, sellPercent: 25, label: "Mid Runner Exit" },
+                { id: 3, targetMC: 100000, sellPercent: 25, label: "Moonshot Target" }
+            ];
+            switchMode('simple');
+            calculate();
+        }
+
+        // Event Listeners for Live Interactivity
+        [entryMCInput, exitMCInput, investAmountInput, solPriceInput, dexFeeInput, slippageInput].forEach(element => {
+            element.addEventListener('input', calculate);
+        });
+
+        // Initialize state
+        window.addEventListener('DOMContentLoaded', () => {
+            calculate();
+        });
+    </script>
+</body>
+</html>
